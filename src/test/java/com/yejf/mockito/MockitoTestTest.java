@@ -3,10 +3,7 @@ package com.yejf.mockito;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
-import org.mockito.InOrder;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -274,4 +271,34 @@ public class MockitoTestTest {
         //Following prints "called with arguments: [foo]"
         System.out.println(mock.someMethod("foo"));
     }
+
+    @Spy
+    MockitoTestI spy = new MockitoTest();
+
+    /**
+     *使用 when(spy.xx()).thenReturn() 将调用原生方法，再修改返回值
+     * 而使用 doReturn().when(spy).xx() 将连原生方法都不调用，直接提供返回值，达到 mock一样的效果
+     *
+     * doReturn(Object)
+     *
+     * doThrow(Throwable...)
+     *
+     * doThrow(Class)
+     *
+     * doAnswer(Answer)
+     *
+     * doNothing()
+     *
+     * doCallRealMethod()
+     */
+    @Test
+    public void doMethod() {
+//        when(spy.someMethod("123")).thenReturn("666");
+        doReturn("555").when(spy).someMethod("123");
+
+        System.out.println(spy.someMethod("123"));
+    }
+
+
+
 }

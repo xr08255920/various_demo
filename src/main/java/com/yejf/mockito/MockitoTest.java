@@ -9,6 +9,8 @@ public class MockitoTest implements  MockitoTestI {
 
     @Override
     public String someMethod(String some_arg) {
-        return "eq_"+some_arg;
+        String s = "eq_" + some_arg;
+        System.out.println("native method :"+s);
+        return s;
     }
 }
