@@ -1,6 +1,7 @@
 package com.yejf.mockito;
 
 public class MockitoTest implements  MockitoTestI {
+    private Person ppp;
 
     @Override
     public void someMethod(int i, String abc, String s) {
@@ -17,5 +18,10 @@ public class MockitoTest implements  MockitoTestI {
     @Override
     public void doSomething(Person capture) {
         capture.setName("mike");
+    }
+
+    @Override
+    public String printPersonName() {
+        return ppp.getName();
     }
 }

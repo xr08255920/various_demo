@@ -6,4 +6,6 @@ public interface MockitoTestI {
     String someMethod(String some_arg);
 
     void doSomething(Person capture);
+
+    String printPersonName();
 }

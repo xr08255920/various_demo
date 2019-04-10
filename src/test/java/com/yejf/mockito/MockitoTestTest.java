@@ -357,11 +357,15 @@ public class MockitoTestTest {
      */
     @Test
     public void capturing() {
+        //等价对象 argumentC
         ArgumentCaptor<Person> argument = ArgumentCaptor.forClass(Person.class);
         mock.doSomething(new Person("John"));
         verify(mock).doSomething(argument.capture());
         assertEquals("John", argument.getValue().getName());
     }
+
+    @Captor
+    ArgumentCaptor<Person> argumentC;
 
     /**
      * mock 对象使用 thenCallRealMethod 可以
@@ -429,4 +433,92 @@ public class MockitoTestTest {
                 .defaultAnswer(CALLS_REAL_METHODS)
                 .serializable());
     }
+
+    @Spy
+    Person person = new Person("ijj");
+
+    @Mock
+    Person ppp;
+
+    @InjectMocks
+    MockitoTest ijMock;
+
+    /**
+     * 环境中的 spy、mock 对象， 会通过 set方法、构造方法、私有变量 注入到@InjectMocks 的对象中去
+     * 若存在多个类型对应的 mock 对象，则按变量名来匹配
+     */
+    @Test
+    public void testInjectMock() {
+        when(ppp.getName()).thenReturn("pdd");
+        String s = ijMock.printPersonName();
+        System.out.println(s);
+    }
+
+    /**
+     * 主要演示了 使用timeout(100) 、 times(1)来限制调用的条件。
+     */
+    @Test
+    public void verifyWithTimeout() {
+        mock.someMethod("12");
+        //passes when someMethod() is called no later than within 100 ms
+        //exits immediately when verification is satisfied (e.g. may not wait full 100 ms)
+        verify(mock, timeout(100)).someMethod("12");
+        //above is an alias to:
+        verify(mock, timeout(100).times(1)).someMethod("12");
+
+        //passes as soon as someMethod() has been called 2 times under 100 ms
+        verify(mock, timeout(100).times(2)).someMethod("12");
+
+        //equivalent: this also passes as soon as someMethod() has been called 2 times under 100 ms
+        verify(mock, timeout(100).atLeast(2)).someMethod("12");
+    }
+
+
+    /**
+     * 经校验，只有 verifyNoMoreInteractions 可以 ignoreStubs
+     */
+    @Test
+    public void ignoreStub() {
+//        verify(mock).someMethod("12");
+//        verify(spy).someMethod("12");
+
+
+        doReturn("12345").when(mock).someMethod(anyString());
+        doReturn("12345").when(spy).someMethod(anyString());
+        System.out.println(mock.someMethod("12"));
+        System.out.println(spy.someMethod("12"));
+
+        //ignores all stubbed methods:
+        verifyNoMoreInteractions(ignoreStubs(mock, spy));
+
+        //creates InOrder that will ignore stubbed
+        InOrder inOrder = inOrder(ignoreStubs(mock, spy));
+        inOrder.verify(mock).someMethod("123");
+        inOrder.verify(spy).someMethod("123");
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * 打印mock细节（鸡肋）
+     */
+    @Test
+    public void mockingDetail() {
+        //To identify whether a particular object is a mock or a spy:
+        Mockito.mockingDetails(mock).isMock();
+        Mockito.mockingDetails(spy).isSpy();
+
+        //Getting details like type to mock or default answer:
+        MockingDetails details = mockingDetails(mock);
+        details.getMockCreationSettings().getTypeToMock();
+        details.getMockCreationSettings().getDefaultAnswer();
+
+        //Getting invocations and stubbings of the mock:
+        details.getInvocations();
+        details.getStubbings();
+
+        //Printing all interactions (including stubbing, unused stubs)
+        System.out.println(mockingDetails(mock).printInvocations());
+    }
+
+
 }
