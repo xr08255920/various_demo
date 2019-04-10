@@ -13,4 +13,9 @@ public class MockitoTest implements  MockitoTestI {
         System.out.println("native method :"+s);
         return s;
     }
+
+    @Override
+    public void doSomething(Person capture) {
+        capture.setName("mike");
+    }
 }

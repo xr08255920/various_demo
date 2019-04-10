@@ -7,10 +7,12 @@ import org.mockito.*;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 import static org.junit.Assert.*;
@@ -300,5 +302,131 @@ public class MockitoTestTest {
     }
 
 
+    /**
+     * 该例子 证明了上一例子的说法
+     * 对 spy 对象进行 stub ，具体方法依然会被执行，只是返回值被 mock 了而已
+     */
+    @Test
+    public void spyRealObject() {
 
+        List list = new LinkedList();
+        List spy = spy(list);
+
+        //optionally, you can stub out some methods:
+        when(spy.size()).thenReturn(100);
+
+        //using the spy calls *real* methods
+        spy.add("one");
+        spy.add("two");
+
+        //Impossible: real method is called so spy.get(0) throws IndexOutOfBoundsException (the list is yet empty)
+        when(spy.get(0)).thenReturn("foo");
+
+        //You have to use doReturn() for stubbing
+        doReturn("foo").when(spy).get(0);
+
+        //prints "one" - the first element of a list
+        System.out.println(spy.get(0));
+
+        //size() method was stubbed - 100 is printed
+        System.out.println(spy.size());
+
+        //optionally, you can verify
+        verify(spy).add("one");
+        verify(spy).add("two");
+    }
+
+    /**
+     * 当 mock 对象方法没被 stub ，默认返回null，使用 RETURNS_SMART_NULLS 后
+     * String 类型会返回空串
+     * Boolean 类型会返回false
+     * Integer 类型会返回 0
+     */
+    @Test
+    public void changeDefaultReturn() {
+        MockitoTestI mock = mock(MockitoTestI.class, Mockito.RETURNS_SMART_NULLS);
+        System.out.println(mock.someMethod("123"));
+    }
+
+    /**
+     * verify 可以使用 anyThat( ArgumentMatcher) 来校验参数
+     * 也可以直接用 ArgumentCaptor
+     *   ArgumentCaptor 适合如下场景:
+     *  1、ArgumentMatcher 不好复用
+     *  2、只需校验参数对象的某个 value
+     */
+    @Test
+    public void capturing() {
+        ArgumentCaptor<Person> argument = ArgumentCaptor.forClass(Person.class);
+        mock.doSomething(new Person("John"));
+        verify(mock).doSomething(argument.capture());
+        assertEquals("John", argument.getValue().getName());
+    }
+
+    /**
+     * mock 对象使用 thenCallRealMethod 可以
+     * 但 mock 的class 必须是具体类，不能是抽象类
+     */
+    @Test
+    public void realPartialMock() {
+        //you can create partial mock with spy() method:
+        List list = spy(new LinkedList());
+
+        //you can enable partial mock capabilities selectively on mocks:
+        MockitoTestI mock = mock(MockitoTest.class);
+        //Be sure the real implementation is 'safe'.
+        //If real implementation throws exceptions or depends on specific state of the object then you're in trouble.
+        when(mock.someMethod("123")).thenCallRealMethod();
+
+        System.out.println(mock.someMethod("123"));
+    }
+
+    /**
+     * reset() 清除 mock 上的 stub
+     */
+    @Test
+    public void resetingMock() {
+        List mock = mock(List.class);
+        when(mock.size()).thenReturn(10);
+        mock.add(1);
+
+        reset(mock);
+        //at this point the mock forgot any interactions & stubbing
+        System.out.println(mock.size());
+//        verify(mock).add(1);
+    }
+
+    /**
+     * 该例子展示了一种测试风格叫BDD behavior driven development
+     * 三步测试：given when then
+     */
+    @Test
+    public void bdd() {
+        //given
+//        given(seller.askForBread()).willReturn(new Bread());
+
+        //when
+//        Goods goods = shop.buyBread();
+
+        //then
+//        assertThat(goods, containBread());
+    }
+
+    /**
+     * 使mock对象可以被序列化（感觉没啥用）
+     */
+    @Test
+    public void serializableMock() {
+
+        //example mock
+        List serializableMock = mock(List.class, withSettings().serializable());
+
+
+        //example spy
+        List<Object> list = new ArrayList<Object>();
+        List<Object> spy = mock(ArrayList.class, withSettings()
+                .spiedInstance(list)
+                .defaultAnswer(CALLS_REAL_METHODS)
+                .serializable());
+    }
 }
